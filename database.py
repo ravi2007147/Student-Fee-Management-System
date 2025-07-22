@@ -229,3 +229,40 @@ def get_payment_history(student_key, course_key=None):
     result = c.fetchall()
     conn.close()
     return result
+
+def course_exists(name):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT 1 FROM courses WHERE LOWER(name) = LOWER(?)", (name,))
+    exists = c.fetchone() is not None
+    conn.close()
+    return exists
+
+def get_enrollment_id(student_id, course_name):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT id FROM enrollments WHERE student_id = ? AND course_name = ?", (student_id, course_name))
+    row = c.fetchone()
+    conn.close()
+    return row[0] if row else None
+
+def can_unenroll(student_id, course_name):
+    enrollment_id = get_enrollment_id(student_id, course_name)
+    if enrollment_id is None:
+        return False
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM payments WHERE enrollment_id = ?", (enrollment_id,))
+    count = c.fetchone()[0]
+    conn.close()
+    return count == 0
+
+def unenroll_student(student_id, course_name):
+    if not can_unenroll(student_id, course_name):
+        return False
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("DELETE FROM enrollments WHERE student_id = ? AND course_name = ?", (student_id, course_name))
+    conn.commit()
+    conn.close()
+    return True
