@@ -88,10 +88,21 @@ def generate_student_id():
     year = datetime.now().year
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM students")
-    count = c.fetchone()[0] + 1
+    # Find the highest existing student_id number for this year
+    c.execute("SELECT student_id FROM students WHERE student_id LIKE ? ORDER BY student_id DESC LIMIT 1", (f"STU{year}-%",))
+    result = c.fetchone()
     conn.close()
-    return f"STU{year}-{str(count).zfill(4)}"
+    
+    if result:
+        # Extract the number from the highest existing ID and increment
+        last_id = result[0]
+        last_number = int(last_id.split('-')[1])
+        new_number = last_number + 1
+    else:
+        # No existing IDs for this year, start with 1
+        new_number = 1
+    
+    return f"STU{year}-{str(new_number).zfill(4)}"
 
 def add_student(name, phone, email, address):
     student_id = generate_student_id()
