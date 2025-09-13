@@ -7,6 +7,7 @@ from PyQt5.QtGui import QFont, QPalette, QColor
 from database import initialize_db
 from course_manager import open_course_manager,open_enroll_window,open_payment_window,open_payment_history  # Assume this will be converted too
 from course_manager import open_student_manager
+from settings_manager import open_settings_window
 
 # Initialize DB on app startup
 initialize_db()
@@ -94,6 +95,10 @@ class InstituteApp(QWidget):
         btn_history = QPushButton("📊 Payment History")
         btn_history.clicked.connect(open_payment_history)
         layout.addWidget(btn_history)
+
+        btn_settings = QPushButton("Settings")
+        btn_settings.clicked.connect(open_settings_window)
+        layout.addWidget(btn_settings)
 
         # Add some bottom spacing
         layout.addStretch()

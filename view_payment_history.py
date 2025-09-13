@@ -102,13 +102,16 @@ class ViewPaymentHistory(QWidget):
         # Search section
         search_section = QLabel("🔍 Search Payments")
         search_section.setStyleSheet("""
-            font-size: 14px;
+            font-size: 18px;
             font-weight: bold;
-            color: #34495e;
-            margin: 15px 0px 10px 0px;
-            padding: 8px 0px;
-            border-bottom: 2px solid #3498db;
+            color: #2c3e50;
+            margin: 10px 0px 20px 0px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
         """)
+        search_section.setAlignment(Qt.AlignCenter)
         layout.addWidget(search_section)
 
         layout.addWidget(QLabel("Search by Student ID or Name:"))
