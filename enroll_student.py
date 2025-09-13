@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton,
-    QTableWidget, QTableWidgetItem, QMessageBox, QSizePolicy, QHeaderView
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+    QTableWidget, QTableWidgetItem, QMessageBox, QSizePolicy, QHeaderView, QTabWidget
 )
 from PyQt5.QtGui import QColor
 from database import get_all_students, get_all_courses, enroll_student, get_student_enrollments, can_unenroll, unenroll_student
@@ -98,25 +98,32 @@ class EnrollStudent(QWidget):
         title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_label)
 
-        # Student section
+        # Create main horizontal layout for left-right sections
+        main_layout = QHBoxLayout()
+        main_layout.setSpacing(20)
+
+        # Left Section - Students
+        left_section = QVBoxLayout()
+        left_section.setSpacing(10)
+        
         student_section = QLabel("👨‍🎓 Select Student")
         student_section.setStyleSheet("""
             font-size: 14px;
             font-weight: bold;
             color: #34495e;
-            margin: 15px 0px 10px 0px;
+            margin: 10px 0px 5px 0px;
             padding: 8px 0px;
             border-bottom: 2px solid #3498db;
         """)
-        layout.addWidget(student_section)
+        left_section.addWidget(student_section)
 
-        layout.addWidget(QLabel("Search Student by Name:"))
+        left_section.addWidget(QLabel("Search Student by Name:"))
         self.student_search = QLineEdit()
         self.student_search.setPlaceholderText("Search by student name...")
         self.student_search.textChanged.connect(self.filter_students)
         self.student_search.setFixedHeight(45)
         self.student_search.setStyleSheet("padding-left: 10px; padding-right: 10px;")
-        layout.addWidget(self.student_search)
+        left_section.addWidget(self.student_search)
 
         self.student_table = QTableWidget()
         self.student_table.setColumnCount(3)
@@ -129,19 +136,34 @@ class EnrollStudent(QWidget):
         header = self.student_table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Stretch)
         self.student_table.itemSelectionChanged.connect(self.refresh_course_list_for_student)
-        layout.addWidget(self.student_table, stretch=1)
+        left_section.addWidget(self.student_table, stretch=1)
 
-        layout.addWidget(QLabel("Search Course by Name:"))
+        # Right Section - Courses
+        right_section = QVBoxLayout()
+        right_section.setSpacing(10)
+        
+        course_section = QLabel("📚 Select Course")
+        course_section.setStyleSheet("""
+            font-size: 14px;
+            font-weight: bold;
+            color: #34495e;
+            margin: 10px 0px 5px 0px;
+            padding: 8px 0px;
+            border-bottom: 2px solid #3498db;
+        """)
+        right_section.addWidget(course_section)
+
+        right_section.addWidget(QLabel("Search Course by Name:"))
         self.course_search = QLineEdit()
         self.course_search.setPlaceholderText("Search by course name...")
         self.course_search.textChanged.connect(self.filter_courses)
         self.course_search.setFixedHeight(45)
         self.course_search.setStyleSheet("padding-left: 10px; padding-right: 10px;")
-        layout.addWidget(self.course_search)
+        right_section.addWidget(self.course_search)
 
         self.course_table = QTableWidget()
-        self.course_table.setColumnCount(3)
-        self.course_table.setHorizontalHeaderLabels(["Course Name", "Fee", "Duration"])
+        self.course_table.setColumnCount(4)
+        self.course_table.setHorizontalHeaderLabels(["Course Name", "Fee", "Duration", "Joining Date"])
         self.course_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.course_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.course_table.setSelectionMode(QTableWidget.SingleSelection)
@@ -149,17 +171,29 @@ class EnrollStudent(QWidget):
         self.course_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         header2 = self.course_table.horizontalHeader()
         header2.setSectionResizeMode(QHeaderView.Stretch)
-        layout.addWidget(self.course_table, stretch=1)
+        right_section.addWidget(self.course_table, stretch=1)
 
+        # Add sections to main layout
+        main_layout.addLayout(left_section, stretch=1)
+        main_layout.addLayout(right_section, stretch=1)
+        layout.addLayout(main_layout, stretch=1)
+
+        # Action buttons at the bottom
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(15)
+        
         self.enroll_button = QPushButton("Enroll")
         self.enroll_button.clicked.connect(self.enroll_selected)
         self.enroll_button.setFixedHeight(45)
-        layout.addWidget(self.enroll_button)
+        button_layout.addWidget(self.enroll_button)
 
         self.unenroll_button = QPushButton("Unenroll")
         self.unenroll_button.clicked.connect(self.unenroll_selected)
         self.unenroll_button.setFixedHeight(45)
-        layout.addWidget(self.unenroll_button)
+        button_layout.addWidget(self.unenroll_button)
+        
+        button_layout.addStretch()  # Push buttons to the left
+        layout.addLayout(button_layout)
 
         self.setLayout(layout)
 
@@ -189,6 +223,8 @@ class EnrollStudent(QWidget):
             self.course_table.setItem(row_idx, 0, QTableWidgetItem(name))
             self.course_table.setItem(row_idx, 1, QTableWidgetItem(f"₹{fee}"))
             self.course_table.setItem(row_idx, 2, QTableWidgetItem(str(duration)))
+            # Initialize joining date as empty - will be updated in refresh_course_list_for_student
+            self.course_table.setItem(row_idx, 3, QTableWidgetItem(""))
         self.filter_courses()
 
     def filter_students(self):
@@ -222,11 +258,29 @@ class EnrollStudent(QWidget):
                 break
         self.selected_student_id = sid
         self.enrolled_courses = get_student_enrollments(self.selected_student_id)
+        
+        # Get enrollment details with dates for the selected student
+        from database import get_connection
+        conn = get_connection()
+        c = conn.cursor()
+        c.execute("""
+            SELECT course_name, enrollment_date 
+            FROM enrollments 
+            WHERE student_id = ?
+        """, (sid,))
+        enrollment_details = {row[0]: row[1] for row in c.fetchall()}
+        conn.close()
+        
         for row in range(self.course_table.rowCount()):
             course_name = self.course_table.item(row, 0).text()
             orig_name = course_name.split(' (Already Enrolled)')[0]
             self.course_table.item(row, 0).setText(orig_name)
             is_enrolled = orig_name in self.enrolled_courses
+            
+            # Update joining date column
+            joining_date = enrollment_details.get(orig_name, "")
+            self.course_table.setItem(row, 3, QTableWidgetItem(joining_date))
+            
             for col in range(self.course_table.columnCount()):
                 item = self.course_table.item(row, col)
                 if is_enrolled:

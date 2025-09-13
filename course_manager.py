@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton,
-    QTableWidget, QTableWidgetItem, QMessageBox, QSizePolicy, QHeaderView, QAbstractItemView
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+    QTableWidget, QTableWidgetItem, QMessageBox, QSizePolicy, QHeaderView, QAbstractItemView, QTabWidget
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -102,6 +102,84 @@ class CourseManager(QWidget):
         title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_label)
 
+        # Create tab widget
+        self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet("""
+            QTabWidget::pane {
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                background-color: white;
+            }
+            QTabBar::tab {
+                background-color: #f8f9fa;
+                color: #495057;
+                padding: 12px 20px;
+                margin-right: 2px;
+                border-top-left-radius: 6px;
+                border-top-right-radius: 6px;
+                font-weight: bold;
+            }
+            QTabBar::tab:selected {
+                background-color: white;
+                color: #2c3e50;
+                border-bottom: 2px solid #3498db;
+            }
+            QTabBar::tab:hover {
+                background-color: #e9ecef;
+            }
+        """)
+        layout.addWidget(self.tab_widget)
+
+        # Create tabs
+        self.create_listing_tab()
+        self.create_add_tab()
+
+        self.setLayout(layout)
+        self.refresh_course_list()
+
+    def create_listing_tab(self):
+        """Create the listing tab with search and table"""
+        listing_tab = QWidget()
+        layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
+
+        # Search/filter bar
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Search by course name...")
+        self.search_input.textChanged.connect(self.filter_courses)
+        self.search_input.setFixedHeight(45)
+        self.search_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
+        layout.addWidget(self.search_input)
+
+        self.course_table = QTableWidget()
+        self.course_table.setColumnCount(5)
+        self.course_table.setHorizontalHeaderLabels(["ID", "Name", "Fee", "Duration (months)", "Delete"])
+        self.course_table.setEditTriggers(QTableWidget.DoubleClicked | QTableWidget.SelectedClicked)
+        self.course_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.course_table.setSelectionMode(QTableWidget.SingleSelection)
+        self.course_table.setSortingEnabled(True)
+        self.course_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.course_table.verticalHeader().setDefaultSectionSize(35)
+        header = self.course_table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.Stretch)
+        # Set fixed width for the delete column
+        header.setSectionResizeMode(4, QHeaderView.Fixed)
+        self.course_table.setColumnWidth(4, 60)
+        self.course_table.itemChanged.connect(self.handle_item_changed)
+        self.course_table.setSelectionMode(QAbstractItemView.NoSelection)  # Only allow row selection via delete button
+        layout.addWidget(self.course_table, stretch=1)
+
+        listing_tab.setLayout(layout)
+        self.tab_widget.addTab(listing_tab, "📋 Listing")
+
+    def create_add_tab(self):
+        """Create the add new course tab"""
+        add_tab = QWidget()
+        layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
+
         # Form section with better grouping
         form_group = QLabel("Add New Course")
         form_group.setStyleSheet("""
@@ -137,33 +215,11 @@ class CourseManager(QWidget):
         self.add_button.setFixedHeight(45)
         layout.addWidget(self.add_button)
 
-        # Search/filter bar
-        self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search by course name...")
-        self.search_input.textChanged.connect(self.filter_courses)
-        self.search_input.setFixedHeight(45)
-        self.search_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
-        layout.addWidget(self.search_input)
+        # Add some stretch to center the form
+        layout.addStretch()
 
-        self.course_table = QTableWidget()
-        self.course_table.setColumnCount(5)
-        self.course_table.setHorizontalHeaderLabels(["ID", "Name", "Fee", "Duration (months)", "Delete"])
-        self.course_table.setEditTriggers(QTableWidget.DoubleClicked | QTableWidget.SelectedClicked)
-        self.course_table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.course_table.setSelectionMode(QTableWidget.SingleSelection)
-        self.course_table.setSortingEnabled(True)
-        self.course_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.course_table.verticalHeader().setDefaultSectionSize(35)
-        header = self.course_table.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.Stretch)
-        # Set fixed width for the delete column
-        header.setSectionResizeMode(4, QHeaderView.Fixed)
-        self.course_table.setColumnWidth(4, 60)
-        self.course_table.itemChanged.connect(self.handle_item_changed)
-        self.course_table.setSelectionMode(QAbstractItemView.NoSelection)  # Only allow row selection via delete button
-
-        self.setLayout(layout)
-        self.refresh_course_list()
+        add_tab.setLayout(layout)
+        self.tab_widget.addTab(add_tab, "➕ Add New")
 
     def handle_add_course(self):
         name = self.course_input.text().strip()
@@ -212,6 +268,9 @@ class CourseManager(QWidget):
         self.fee_input.clear()
         self.duration_input.clear()
         self.refresh_course_list()
+        
+        # Switch to listing tab to show the newly added course
+        self.tab_widget.setCurrentIndex(0)
 
     def refresh_course_list(self):
         self.all_courses = get_courses()
