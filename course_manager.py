@@ -15,40 +15,133 @@ class CourseManager(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Course Manager")
-        self.setGeometry(150, 150, 400, 500)
+        self.setGeometry(150, 150, 800, 700)
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #f8f9fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+            }
+            QLabel {
+                color: #2c3e50;
+                font-weight: 600;
+                font-size: 12px;
+                margin: 5px 0px;
+            }
+            QLineEdit {
+                background-color: white;
+                border: 2px solid #e9ecef;
+                border-radius: 6px;
+                padding: 10px;
+                font-size: 12px;
+                color: #495057;
+            }
+            QLineEdit:focus {
+                border-color: #3498db;
+                background-color: #f8f9fa;
+            }
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: bold;
+                min-height: 40px;
+            }
+            QPushButton:hover {
+                background-color: #2980b9;
+            }
+            QPushButton:pressed {
+                background-color: #21618c;
+            }
+            QTableWidget {
+                background-color: white;
+                alternate-background-color: #f8f9fa;
+                gridline-color: #dee2e6;
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #f1f3f4;
+            }
+            QTableWidget::item:selected {
+                background-color: #3498db;
+                color: white;
+            }
+            QHeaderView::section {
+                background-color: #2c3e50;
+                color: white;
+                padding: 12px;
+                border: none;
+                font-weight: bold;
+                font-size: 11px;
+            }
+            QHeaderView::section:hover {
+                background-color: #34495e;
+            }
+        """)
 
         layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(25, 25, 25, 25)
 
-        layout.addWidget(QLabel("Add New Course:"))
+        # Title section
+        title_label = QLabel("📚 Course Management")
+        title_label.setStyleSheet("""
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0px 20px 0px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        """)
+        title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_label)
+
+        # Form section with better grouping
+        form_group = QLabel("Add New Course")
+        form_group.setStyleSheet("""
+            font-size: 14px;
+            font-weight: bold;
+            color: #34495e;
+            margin: 15px 0px 10px 0px;
+            padding: 8px 0px;
+            border-bottom: 2px solid #3498db;
+        """)
+        layout.addWidget(form_group)
 
         self.course_input = QLineEdit()
         self.course_input.setPlaceholderText("Enter course name")
-        self.course_input.setFixedHeight(32)
+        self.course_input.setFixedHeight(45)
         self.course_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         layout.addWidget(self.course_input)
 
         self.fee_input = QLineEdit()
         self.fee_input.setPlaceholderText("Enter course fee")
-        self.fee_input.setFixedHeight(32)
+        self.fee_input.setFixedHeight(45)
         self.fee_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         layout.addWidget(self.fee_input)
 
         self.duration_input = QLineEdit()
         self.duration_input.setPlaceholderText("Enter duration (e.g., 3 months)")
-        self.duration_input.setFixedHeight(32)
+        self.duration_input.setFixedHeight(45)
         self.duration_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         layout.addWidget(self.duration_input)
 
         self.add_button = QPushButton("Add Course")
         self.add_button.clicked.connect(self.handle_add_course)
-        self.add_button.setFixedHeight(32)
+        self.add_button.setFixedHeight(45)
         layout.addWidget(self.add_button)
 
         # Search/filter bar
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search by course name...")
         self.search_input.textChanged.connect(self.filter_courses)
-        self.search_input.setFixedHeight(32)
+        self.search_input.setFixedHeight(45)
         self.search_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         layout.addWidget(self.search_input)
 
@@ -60,9 +153,12 @@ class CourseManager(QWidget):
         self.course_table.setSelectionMode(QTableWidget.SingleSelection)
         self.course_table.setSortingEnabled(True)
         self.course_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        layout.addWidget(self.course_table, stretch=1)
+        self.course_table.verticalHeader().setDefaultSectionSize(35)
         header = self.course_table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Stretch)
+        # Set fixed width for the delete column
+        header.setSectionResizeMode(4, QHeaderView.Fixed)
+        self.course_table.setColumnWidth(4, 60)
         self.course_table.itemChanged.connect(self.handle_item_changed)
         self.course_table.setSelectionMode(QAbstractItemView.NoSelection)  # Only allow row selection via delete button
 
@@ -131,13 +227,28 @@ class CourseManager(QWidget):
         if icon.isNull():
             icon = QIcon.fromTheme('window-close')
         if icon.isNull():
-            # Fallback: use a trash unicode emoji as icon
             btn.setText("🗑️")
         else:
             btn.setIcon(icon)
             btn.setText("")
         btn.setToolTip('Delete this course')
         btn.setFlat(True)
+        btn.setFixedSize(28, 20)
+        btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                border: none;
+                padding: 0px;
+                margin: 0px;
+            }
+            QPushButton:hover {
+                background-color: #ffebee;
+                border-radius: 3px;
+            }
+            QPushButton:pressed {
+                background-color: #ffcdd2;
+            }
+        """)
         btn.clicked.connect(lambda _, cid=course_id: self.confirm_delete_course(cid))
         self.course_table.setCellWidget(row, 4, btn)
 

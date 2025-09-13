@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit,
-    QPushButton, QTableWidget, QTableWidgetItem, QMessageBox, QSizePolicy, QHeaderView, QAbstractItemView
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+    QPushButton, QTableWidget, QTableWidgetItem, QMessageBox, QSizePolicy, QHeaderView, QAbstractItemView, QTabWidget
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -10,64 +10,217 @@ class StudentManager(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Student Manager")
-        self.setGeometry(200, 200, 700, 500)
+        self.setGeometry(200, 200, 800, 700)
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #f8f9fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+            }
+            QLabel {
+                color: #2c3e50;
+                font-weight: 600;
+                font-size: 12px;
+                margin: 5px 0px;
+            }
+            QLineEdit {
+                background-color: white;
+                border: 2px solid #e9ecef;
+                border-radius: 6px;
+                padding: 10px;
+                font-size: 12px;
+                color: #495057;
+            }
+            QLineEdit:focus {
+                border-color: #3498db;
+                background-color: #f8f9fa;
+            }
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: bold;
+                min-height: 40px;
+            }
+            QPushButton:hover {
+                background-color: #2980b9;
+            }
+            QPushButton:pressed {
+                background-color: #21618c;
+            }
+            QTableWidget {
+                background-color: white;
+                alternate-background-color: #f8f9fa;
+                gridline-color: #dee2e6;
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #f1f3f4;
+            }
+            QTableWidget::item:selected {
+                background-color: #3498db;
+                color: white;
+            }
+            QHeaderView::section {
+                background-color: #2c3e50;
+                color: white;
+                padding: 12px;
+                border: none;
+                font-weight: bold;
+                font-size: 11px;
+            }
+            QHeaderView::section:hover {
+                background-color: #34495e;
+            }
+        """)
 
         layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(25, 25, 25, 25)
 
-        layout.addWidget(QLabel("Add New Student:"))
+        # Title section
+        title_label = QLabel("👨‍🎓 Student Management")
+        title_label.setStyleSheet("""
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0px 20px 0px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        """)
+        title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_label)
 
-        self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Name (required)")
-        self.name_input.setFixedHeight(32)
-        self.name_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
-        layout.addWidget(self.name_input)
+        # Create tab widget
+        self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet("""
+            QTabWidget::pane {
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                background-color: white;
+            }
+            QTabBar::tab {
+                background-color: #f8f9fa;
+                color: #495057;
+                padding: 12px 20px;
+                margin-right: 2px;
+                border-top-left-radius: 6px;
+                border-top-right-radius: 6px;
+                font-weight: bold;
+            }
+            QTabBar::tab:selected {
+                background-color: white;
+                color: #2c3e50;
+                border-bottom: 2px solid #3498db;
+            }
+            QTabBar::tab:hover {
+                background-color: #e9ecef;
+            }
+        """)
+        layout.addWidget(self.tab_widget)
 
-        self.phone_input = QLineEdit()
-        self.phone_input.setPlaceholderText("Phone Number (required)")
-        self.phone_input.setFixedHeight(32)
-        self.phone_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
-        layout.addWidget(self.phone_input)
+        # Create tabs
+        self.create_listing_tab()
+        self.create_add_tab()
 
-        self.email_input = QLineEdit()
-        self.email_input.setPlaceholderText("Email (optional)")
-        self.email_input.setFixedHeight(32)
-        self.email_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
-        layout.addWidget(self.email_input)
+        self.setLayout(layout)
+        self.refresh_students()
 
-        self.address_input = QLineEdit()
-        self.address_input.setPlaceholderText("Address (optional)")
-        self.address_input.setFixedHeight(32)
-        self.address_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
-        layout.addWidget(self.address_input)
-
-        self.add_button = QPushButton("Add Student")
-        self.add_button.clicked.connect(self.handle_add_student)
-        self.add_button.setFixedHeight(32)
-        layout.addWidget(self.add_button)
+    def create_listing_tab(self):
+        """Create the listing tab with search and table"""
+        listing_tab = QWidget()
+        layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
 
         # Search/filter bar
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search by student name...")
         self.search_input.textChanged.connect(self.filter_students)
-        self.search_input.setFixedHeight(32)
+        self.search_input.setFixedHeight(45)
         self.search_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         layout.addWidget(self.search_input)
 
         self.student_table = QTableWidget()
         self.student_table.setColumnCount(6)
         self.student_table.setHorizontalHeaderLabels(["ID", "Name", "Phone", "Email", "Address", "Delete"])
-        self.student_table.setEditTriggers(QTableWidget.DoubleClicked | QTableWidget.SelectedClicked)
+        self.student_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.student_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.student_table.setSelectionMode(QTableWidget.SingleSelection)
         self.student_table.setSortingEnabled(True)
         self.student_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.student_table.verticalHeader().setDefaultSectionSize(35)
         header = self.student_table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Stretch)
+        # Set fixed width for the delete column
+        header.setSectionResizeMode(5, QHeaderView.Fixed)
+        self.student_table.setColumnWidth(5, 60)
         self.student_table.itemChanged.connect(self.handle_item_changed)
         self.student_table.setSelectionMode(QAbstractItemView.NoSelection)
         layout.addWidget(self.student_table, stretch=1)
 
-        self.setLayout(layout)
-        self.refresh_students()
+        listing_tab.setLayout(layout)
+        self.tab_widget.addTab(listing_tab, "📋 Listing")
+
+    def create_add_tab(self):
+        """Create the add new student tab"""
+        add_tab = QWidget()
+        layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
+
+        # Form section with better grouping
+        form_group = QLabel("Add New Student")
+        form_group.setStyleSheet("""
+            font-size: 14px;
+            font-weight: bold;
+            color: #34495e;
+            margin: 15px 0px 10px 0px;
+            padding: 8px 0px;
+            border-bottom: 2px solid #3498db;
+        """)
+        layout.addWidget(form_group)
+
+        self.name_input = QLineEdit()
+        self.name_input.setPlaceholderText("Name (required)")
+        self.name_input.setFixedHeight(45)
+        self.name_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
+        layout.addWidget(self.name_input)
+
+        self.phone_input = QLineEdit()
+        self.phone_input.setPlaceholderText("Phone Number (required)")
+        self.phone_input.setFixedHeight(45)
+        self.phone_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
+        layout.addWidget(self.phone_input)
+
+        self.email_input = QLineEdit()
+        self.email_input.setPlaceholderText("Email (optional)")
+        self.email_input.setFixedHeight(45)
+        self.email_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
+        layout.addWidget(self.email_input)
+
+        self.address_input = QLineEdit()
+        self.address_input.setPlaceholderText("Address (optional)")
+        self.address_input.setFixedHeight(45)
+        self.address_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
+        layout.addWidget(self.address_input)
+
+        self.add_button = QPushButton("Add Student")
+        self.add_button.clicked.connect(self.handle_add_student)
+        self.add_button.setFixedHeight(45)
+        layout.addWidget(self.add_button)
+
+        # Add some stretch to center the form
+        layout.addStretch()
+
+        add_tab.setLayout(layout)
+        self.tab_widget.addTab(add_tab, "➕ Add New")
 
     def handle_add_student(self):
         name = self.name_input.text().strip()
@@ -85,6 +238,9 @@ class StudentManager(QWidget):
         self.email_input.clear()
         self.address_input.clear()
         self.refresh_students()
+        
+        # Switch to listing tab to show the newly added student
+        self.tab_widget.setCurrentIndex(0)
 
     def refresh_students(self):
         self.all_students = get_students()
@@ -124,6 +280,22 @@ class StudentManager(QWidget):
             btn.setText("")
         btn.setToolTip('Delete this student')
         btn.setFlat(True)
+        btn.setFixedSize(28, 20)
+        btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                border: none;
+                padding: 0px;
+                margin: 0px;
+            }
+            QPushButton:hover {
+                background-color: #ffebee;
+                border-radius: 3px;
+            }
+            QPushButton:pressed {
+                background-color: #ffcdd2;
+            }
+        """)
         btn.clicked.connect(lambda _, sid=student_id: self.confirm_delete_student(sid))
         self.student_table.setCellWidget(row, 5, btn)
 

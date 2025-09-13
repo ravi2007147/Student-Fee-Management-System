@@ -4,19 +4,108 @@ from PyQt5.QtWidgets import (
 )
 from database import get_enrollments_by_student_identifier, add_payment, get_total_paid
 from datetime import datetime
+from PyQt5.QtCore import Qt
 
 
 class RecordPayment(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Record Payment")
-        self.setGeometry(300, 300, 600, 600)
+        self.setGeometry(300, 300, 700, 600)
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #f8f9fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+            }
+            QLabel {
+                color: #2c3e50;
+                font-weight: 600;
+                font-size: 12px;
+                margin: 5px 0px;
+            }
+            QLineEdit {
+                background-color: white;
+                border: 2px solid #e9ecef;
+                border-radius: 6px;
+                padding: 10px;
+                font-size: 12px;
+                color: #495057;
+            }
+            QLineEdit:focus {
+                border-color: #3498db;
+                background-color: #f8f9fa;
+            }
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: bold;
+                min-height: 40px;
+            }
+            QPushButton:hover {
+                background-color: #2980b9;
+            }
+            QPushButton:pressed {
+                background-color: #21618c;
+            }
+            QListWidget {
+                background-color: white;
+                alternate-background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                padding: 5px;
+            }
+            QListWidget::item {
+                padding: 10px;
+                border-bottom: 1px solid #f1f3f4;
+                margin: 2px 0px;
+            }
+            QListWidget::item:selected {
+                background-color: #3498db;
+                color: white;
+                border-radius: 4px;
+            }
+        """)
 
         layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(25, 25, 25, 25)
+
+        # Title section
+        title_label = QLabel("💰 Record Payment")
+        title_label.setStyleSheet("""
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0px 20px 0px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        """)
+        title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_label)
+
+        # Search section
+        search_section = QLabel("🔍 Search Student")
+        search_section.setStyleSheet("""
+            font-size: 14px;
+            font-weight: bold;
+            color: #34495e;
+            margin: 15px 0px 10px 0px;
+            padding: 8px 0px;
+            border-bottom: 2px solid #3498db;
+        """)
+        layout.addWidget(search_section)
 
         layout.addWidget(QLabel("Search Student by ID or Name:"))
         self.search_input = QLineEdit()
         self.search_input.textChanged.connect(self.search_enrollments)
+        self.search_input.setFixedHeight(45)
+        self.search_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         layout.addWidget(self.search_input)
 
         self.enrollment_list = QListWidget()
@@ -24,6 +113,7 @@ class RecordPayment(QWidget):
 
         self.pay_button = QPushButton("Record Payment")
         self.pay_button.clicked.connect(self.record_payment)
+        self.pay_button.setFixedHeight(45)
         layout.addWidget(self.pay_button)
 
         self.setLayout(layout)

@@ -11,16 +11,111 @@ class EnrollStudent(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Enroll Student")
-        self.setGeometry(250, 250, 900, 600)
+        self.setGeometry(250, 250, 1000, 700)
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #f8f9fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+            }
+            QLabel {
+                color: #2c3e50;
+                font-weight: 600;
+                font-size: 12px;
+                margin: 5px 0px;
+            }
+            QLineEdit {
+                background-color: white;
+                border: 2px solid #e9ecef;
+                border-radius: 6px;
+                padding: 10px;
+                font-size: 12px;
+                color: #495057;
+            }
+            QLineEdit:focus {
+                border-color: #3498db;
+                background-color: #f8f9fa;
+            }
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: bold;
+                min-height: 40px;
+            }
+            QPushButton:hover {
+                background-color: #2980b9;
+            }
+            QPushButton:pressed {
+                background-color: #21618c;
+            }
+            QTableWidget {
+                background-color: white;
+                alternate-background-color: #f8f9fa;
+                gridline-color: #dee2e6;
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #f1f3f4;
+            }
+            QTableWidget::item:selected {
+                background-color: #3498db;
+                color: white;
+            }
+            QHeaderView::section {
+                background-color: #2c3e50;
+                color: white;
+                padding: 12px;
+                border: none;
+                font-weight: bold;
+                font-size: 11px;
+            }
+            QHeaderView::section:hover {
+                background-color: #34495e;
+            }
+        """)
 
         layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(25, 25, 25, 25)
+
+        # Title section
+        title_label = QLabel("📝 Student Enrollment")
+        title_label.setStyleSheet("""
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0px 20px 0px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        """)
+        title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_label)
+
+        # Student section
+        student_section = QLabel("👨‍🎓 Select Student")
+        student_section.setStyleSheet("""
+            font-size: 14px;
+            font-weight: bold;
+            color: #34495e;
+            margin: 15px 0px 10px 0px;
+            padding: 8px 0px;
+            border-bottom: 2px solid #3498db;
+        """)
+        layout.addWidget(student_section)
 
         layout.addWidget(QLabel("Search Student by Name:"))
         self.student_search = QLineEdit()
         self.student_search.setPlaceholderText("Search by student name...")
-        self.student_search.setFixedHeight(32)
-        self.student_search.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         self.student_search.textChanged.connect(self.filter_students)
+        self.student_search.setFixedHeight(45)
+        self.student_search.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         layout.addWidget(self.student_search)
 
         self.student_table = QTableWidget()
@@ -39,9 +134,9 @@ class EnrollStudent(QWidget):
         layout.addWidget(QLabel("Search Course by Name:"))
         self.course_search = QLineEdit()
         self.course_search.setPlaceholderText("Search by course name...")
-        self.course_search.setFixedHeight(32)
-        self.course_search.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         self.course_search.textChanged.connect(self.filter_courses)
+        self.course_search.setFixedHeight(45)
+        self.course_search.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         layout.addWidget(self.course_search)
 
         self.course_table = QTableWidget()
@@ -57,13 +152,13 @@ class EnrollStudent(QWidget):
         layout.addWidget(self.course_table, stretch=1)
 
         self.enroll_button = QPushButton("Enroll")
-        self.enroll_button.setFixedHeight(32)
         self.enroll_button.clicked.connect(self.enroll_selected)
+        self.enroll_button.setFixedHeight(45)
         layout.addWidget(self.enroll_button)
 
         self.unenroll_button = QPushButton("Unenroll")
-        self.unenroll_button.setFixedHeight(32)
         self.unenroll_button.clicked.connect(self.unenroll_selected)
+        self.unenroll_button.setFixedHeight(45)
         layout.addWidget(self.unenroll_button)
 
         self.setLayout(layout)

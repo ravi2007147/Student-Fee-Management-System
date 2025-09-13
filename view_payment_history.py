@@ -12,20 +12,120 @@ class ViewPaymentHistory(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("View Payment History")
-        self.setGeometry(200, 200, 900, 500)
+        self.setGeometry(200, 200, 1000, 600)
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #f8f9fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+            }
+            QLabel {
+                color: #2c3e50;
+                font-weight: 600;
+                font-size: 12px;
+                margin: 5px 0px;
+            }
+            QLineEdit {
+                background-color: white;
+                border: 2px solid #e9ecef;
+                border-radius: 6px;
+                padding: 10px;
+                font-size: 12px;
+                color: #495057;
+            }
+            QLineEdit:focus {
+                border-color: #3498db;
+                background-color: #f8f9fa;
+            }
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: bold;
+                min-height: 40px;
+            }
+            QPushButton:hover {
+                background-color: #2980b9;
+            }
+            QPushButton:pressed {
+                background-color: #21618c;
+            }
+            QTableWidget {
+                background-color: white;
+                alternate-background-color: #f8f9fa;
+                gridline-color: #dee2e6;
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #f1f3f4;
+            }
+            QTableWidget::item:selected {
+                background-color: #3498db;
+                color: white;
+            }
+            QHeaderView::section {
+                background-color: #2c3e50;
+                color: white;
+                padding: 12px;
+                border: none;
+                font-weight: bold;
+                font-size: 11px;
+            }
+            QHeaderView::section:hover {
+                background-color: #34495e;
+            }
+        """)
 
         layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(25, 25, 25, 25)
+
+        # Title section
+        title_label = QLabel("📊 Payment History")
+        title_label.setStyleSheet("""
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0px 20px 0px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        """)
+        title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_label)
+
+        # Search section
+        search_section = QLabel("🔍 Search Payments")
+        search_section.setStyleSheet("""
+            font-size: 14px;
+            font-weight: bold;
+            color: #34495e;
+            margin: 15px 0px 10px 0px;
+            padding: 8px 0px;
+            border-bottom: 2px solid #3498db;
+        """)
+        layout.addWidget(search_section)
 
         layout.addWidget(QLabel("Search by Student ID or Name:"))
         self.student_input = QLineEdit()
+        self.student_input.setFixedHeight(45)
+        self.student_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         layout.addWidget(self.student_input)
 
         layout.addWidget(QLabel("Search by Course Name (optional):"))
         self.course_input = QLineEdit()
+        self.course_input.setFixedHeight(45)
+        self.course_input.setStyleSheet("padding-left: 10px; padding-right: 10px;")
         layout.addWidget(self.course_input)
 
         self.search_btn = QPushButton("Search")
         self.search_btn.clicked.connect(self.search_payments)
+        self.search_btn.setFixedHeight(45)
         layout.addWidget(self.search_btn)
 
         self.results_table = QTableWidget()
@@ -43,6 +143,7 @@ class ViewPaymentHistory(QWidget):
 
         self.print_btn = QPushButton("Generate Payment Memo for Selected")
         self.print_btn.clicked.connect(self.generate_payment_memo)
+        self.print_btn.setFixedHeight(45)
         layout.addWidget(self.print_btn)
 
         self.setLayout(layout)
